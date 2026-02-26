@@ -1,4 +1,4 @@
-const API = 'categories_action.php';
+const API = 'controllers/categories_action.php';
 
 /* ── View mode ───────────────────────────────────────────────── */
 let curView = localStorage.getItem('catView') || 'grid';
