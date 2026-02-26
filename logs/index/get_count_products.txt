@@ -1,5 +1,0 @@
-[2026-02-26 05:05:32] [8192] number_format(): Passing null to parameter #1 ($num) of type float is deprecated in E:\xampp\htdocs\demo_1\Index.php on line 51
-[2026-02-26 05:05:32] [2] Undefined variable $recent_orders in E:\xampp\htdocs\demo_1\Index.php on line 165
-[2026-02-26 05:05:32] [2] foreach() argument must be of type array|object, null given in E:\xampp\htdocs\demo_1\Index.php on line 165
-[2026-02-26 05:05:32] [2] Undefined variable $low_stock_items in E:\xampp\htdocs\demo_1\Index.php on line 190
-[2026-02-26 05:05:32] [2] foreach() argument must be of type array|object, null given in E:\xampp\htdocs\demo_1\Index.php on line 190

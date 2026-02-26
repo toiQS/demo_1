@@ -1,27 +1,10 @@
 <?php
+include_once 'controllers/index_actions/get_dashboard_data.php';
 
 $page_title    = 'Dashboard';
 $page_subtitle = 'Xin chào! Đây là tổng quan hệ thống hôm nay.';
 $active_nav    = 'home';
-
 include_once 'assets/layout.php';
-
-require_once 'controllers\index_actions\get_count_users.php';
-require_once 'controllers\index_actions\get_count_orders.php';
-require_once 'controllers\index_actions\get_count_orders_pending_comfirmed.php';
-require_once 'controllers\index_actions\get_monthly_revenue.php';
-require_once 'controllers\index_actions\get_count_products.php';
-
-$stats = [
-  'total_orders'    => $result_order_count,
-  'pending_orders'  => $result_order_pending_comfirmed_count,
-  'total_products'  => $result_product_count,
-  'low_stock'       => 5,
-  'total_users'     => $result_user_count,
-  'revenue_month'   => $result_monthly_revenue,
-  'import_receipts' => 42,
-];
-
 
 ?>
 
@@ -31,7 +14,6 @@ $stats = [
     <div class="stat-info">
       <div class="stat-label">Tổng đơn hàng</div>
       <div class="stat-value"><?= number_format($stats['total_orders']) ?></div>
-      <!-- <div class="stat-sub"><span class="up">▲ 12%</span> so với tháng trước</div> -->
     </div>
   </div>
 
@@ -49,7 +31,6 @@ $stats = [
     <div class="stat-info">
       <div class="stat-label">Doanh thu tháng</div>
       <div class="stat-value" style="font-size:18px;color:var(--green)"><?= number_format($stats['revenue_month']) ?>₫</div>
-      <!-- <div class="stat-sub"><span class="up">▲ 8.4%</span> so với tháng trước</div> -->
     </div>
   </div>
 
@@ -67,7 +48,6 @@ $stats = [
     <div class="stat-info">
       <div class="stat-label">Người dùng</div>
       <div class="stat-value"><?= number_format($stats['total_users']) ?></div>
-      <!-- <div class="stat-sub"><span class="up">▲ 5.2%</span> tháng này</div> -->
     </div>
   </div>
 

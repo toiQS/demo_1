@@ -1,5 +1,6 @@
 Quy ước trạng thái đơn hàng
-0 - không xác định
-1 - chưa thanh toán
-2 - xác nhận (bắt buộc phải hoàn tất thanh toán)
-3 - đã xác nhậns
+0 - chờ xác nhận
+1 - đang xử lý
+2 - đang giao
+3 - hoàn thành
+4 - đã hủy
