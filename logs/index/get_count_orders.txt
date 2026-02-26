@@ -1,0 +1,4 @@
+[2026-02-26 04:52:01] [2] Undefined variable $recent_orders in E:\xampp\htdocs\demo_1\Index.php on line 162
+[2026-02-26 04:52:01] [2] foreach() argument must be of type array|object, null given in E:\xampp\htdocs\demo_1\Index.php on line 162
+[2026-02-26 04:52:01] [2] Undefined variable $low_stock_items in E:\xampp\htdocs\demo_1\Index.php on line 187
+[2026-02-26 04:52:01] [2] foreach() argument must be of type array|object, null given in E:\xampp\htdocs\demo_1\Index.php on line 187

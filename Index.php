@@ -7,8 +7,20 @@ $active_nav    = 'home';
 include_once 'assets/layout.php';
 
 require_once 'controllers\index_actions\get_count_users.php';
+require_once 'controllers\index_actions\get_count_orders.php';
+require_once 'controllers\index_actions\get_count_orders_pending_comfirmed.php';
+require_once 'controllers\index_actions\get_monthly_revenue.php';
+require_once 'controllers\index_actions\get_count_products.php';
 
-$user_count = $result_user_count;
+$stats = [
+  'total_orders'    => $result_order_count,
+  'pending_orders'  => $result_order_pending_comfirmed_count,
+  'total_products'  => $result_product_count,
+  'low_stock'       => 5,
+  'total_users'     => $result_user_count,
+  'revenue_month'   => $result_monthly_revenue,
+  'import_receipts' => 42,
+];
 
 
 ?>
@@ -54,7 +66,7 @@ $user_count = $result_user_count;
     <div class="stat-icon si-purple"><i class="fa-solid fa-users"></i></div>
     <div class="stat-info">
       <div class="stat-label">Người dùng</div>
-      <div class="stat-value"><?= number_format($user_count) ?></div>
+      <div class="stat-value"><?= number_format($stats['total_users']) ?></div>
       <!-- <div class="stat-sub"><span class="up">▲ 5.2%</span> tháng này</div> -->
     </div>
   </div>
