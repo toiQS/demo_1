@@ -1,0 +1,4 @@
+[2026-02-26 06:06:01] [2] include_once(assets/layout.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\demo_1\Index.php on line 7
+[2026-02-26 06:06:01] [2] include_once(): Failed opening 'assets/layout.php' for inclusion (include_path='E:\xampp\php\PEAR') in E:\xampp\htdocs\demo_1\Index.php on line 7
+[2026-02-26 06:06:01] [2] require_once(assets/layout_footer.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\demo_1\Index.php on line 188
+[2026-02-26 06:06:37] [2] require_once(assets/layout_footer.php): Failed to open stream: No such file or directory in E:\xampp\htdocs\demo_1\Index.php on line 188
