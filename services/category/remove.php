@@ -6,8 +6,8 @@
  * Input  : $id (int)
  * Output : $result = ['success' => bool, 'message' => string]
  */
-require_once 'controllers/connectDB.php';
-require_once 'controllers/object_status.php';
+require_once 'services/connectDB.php'; 
+require_once 'services/object_status.php';
 
 $result = ['success' => false, 'message' => ''];
 
