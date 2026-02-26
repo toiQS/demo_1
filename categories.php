@@ -3,8 +3,11 @@ $page_title    = 'Quản lý Danh mục';
 $page_subtitle = 'Thêm & quản lý loại thiết bị điện tử';
 $active_nav    = 'categories';
 
-// Lấy $categories[], $pending_orders, $low_stock_count từ DB
+
 require_once 'services/category/gets.php';
+
+
+$categories = $categories ?? [];
 
 // Stats nhanh
 $totalCat  = count($categories);
@@ -66,6 +69,24 @@ require_once 'includes/layout.php';
     <option value="0">Đang ẩn</option>
   </select>
   <div style="margin-left:auto;display:flex;gap:8px">
+    <a href="error.php" class="btn btn-secondary" title="Xem lỗi hệ thống" style="gap:6px">
+      <i class="fa-solid fa-bug"></i>
+      <?php
+        // Hiển thị badge số lỗi nếu có trong log
+        $errCount = 0;
+        $logCheck = __DIR__ . '/logs/index/dashboard.text';
+        if (file_exists($logCheck) && filesize($logCheck) > 0) {
+            $lines = file($logCheck, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $errCount = count($lines);
+        }
+      ?>
+      <?php if ($errCount > 0): ?>
+        <span style="background:var(--red);color:#fff;font-size:10px;font-weight:700;
+                     padding:1px 6px;border-radius:10px;min-width:18px;text-align:center">
+          <?= $errCount ?>
+        </span>
+      <?php endif; ?>
+    </a>
     <button class="btn btn-secondary btn-icon is-active" id="btnGrid"
       onclick="setView('grid')" title="Dạng lưới">
       <i class="fa-solid fa-grip"></i>
@@ -198,14 +219,11 @@ require_once 'includes/layout.php';
               data-status="<?= $c['status'] ?>">
 
               <td style="font-family:var(--mono);color:var(--text-muted)"><?= $c['id'] ?></td>
-
               <td style="font-weight:600"><?= htmlspecialchars($c['name']) ?></td>
-
               <td style="color:var(--text-muted);font-size:12px;max-width:240px;
                           overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                 <?= htmlspecialchars($c['desc'] ?? '') ?>
               </td>
-
               <td style="text-align:center;font-family:var(--mono);color:var(--blue)">
                 <?= number_format($c['count']) ?>
               </td>
@@ -270,14 +288,22 @@ require_once 'includes/layout.php';
       </div>
 
       <div class="form-group">
-        <label class="form-label">Mô tả</label>
+        <label class="form-label">Mô tả
+          <span style="color:var(--text-muted);font-weight:400;text-transform:none">
+            (không lưu vào DB – chỉ hiển thị UI)
+          </span>
+        </label>
         <textarea class="form-control" id="cDesc" rows="3"
           placeholder="Mô tả ngắn về danh mục..."
           style="resize:vertical"></textarea>
       </div>
 
       <div class="form-group" style="margin-bottom:0">
-        <label class="form-label">Trạng thái</label>
+        <label class="form-label">Trạng thái
+          <span style="color:var(--text-muted);font-weight:400;text-transform:none">
+            (chưa lưu vào DB)
+          </span>
+        </label>
         <div class="toggle-wrap">
           <label class="toggle-switch">
             <input type="checkbox" id="cStatusToggle" checked onchange="syncStatus()">
@@ -303,6 +329,6 @@ require_once 'includes/layout.php';
 
 <script src="assets/js/categories.js"></script>
 <?php
-$conn->close();
+if (isset($conn)) $conn->close();
 require_once 'includes/layout_footer.php';
 ?>

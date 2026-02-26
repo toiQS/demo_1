@@ -2,6 +2,9 @@
 /**
  * controllers/categories_action.php
  * JSON API cho trang quản lý danh mục
+ *
+ * FIX: Tất cả require dùng __DIR__ để path tuyệt đối,
+ *      không phụ thuộc vào CWD khi gọi qua AJAX.
  */
 
 ini_set('display_errors', 0);
@@ -30,26 +33,36 @@ if (!is_array($body)) {
 }
 
 $action = strtolower(trim($body['action'] ?? ''));
-$id     = isset($body['id'])   ? (int) $body['id']   : 0;
-$name   = isset($body['name']) ? trim($body['name'])  : '';
+$id     = isset($body['id'])   ? (int)  $body['id']   : 0;
+$name   = isset($body['name']) ? trim($body['name'])   : '';
 
 $result = ['success' => false, 'message' => 'Action không hợp lệ.'];
 
+// FIX: dùng __DIR__ . '/../services/category/...' thay vì path tương đối sai
 switch ($action) {
     case 'add':
-        require 'services/category/add.php';
+        require __DIR__ . '/../services/category/add.php';
         break;
 
     case 'edit':
-        require '/../services/category/edit.php';
+        // FIX: file edit.php đã được tạo (trước đây không tồn tại)
+        require __DIR__ . '/../services/category/edit.php';
         break;
 
     case 'toggle':
-        require '/../services/category/toggle.php';
+        require __DIR__ . '/../services/category/toggle.php';
         break;
 
     case 'delete':
-        require '/../services/category/remove.php';
+        require __DIR__ . '/../services/category/remove.php';
+        break;
+
+    default:
+        // Ghi log action không xác định
+        @file_put_contents(__DIR__ . '/../logs/index/dashboard.text',
+            date('[Y-m-d H:i:s]') . " [CATEGORIES/action] Unknown action: $action\n",
+            FILE_APPEND
+        );
         break;
 }
 

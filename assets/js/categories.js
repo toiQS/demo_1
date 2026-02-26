@@ -1,5 +1,46 @@
-// ✅ Đường dẫn đúng tới file controller
-const API = 'controllers/categories_action.php';
+/**
+ * assets/js/categories.js
+ * Quản lý danh mục — View + AJAX actions
+ * FIX: xử lý lỗi tốt hơn, redirect đến error.php khi server error
+ */
+
+const API      = 'controllers/categories_action.php';
+const ERROR_PAGE = 'error.php';
+
+/* ── Helpers ─────────────────────────────────────────────────── */
+
+/**
+ * Parse JSON an toàn. Nếu server trả về HTML (lỗi PHP 500),
+ * trả về null và caller sẽ xử lý.
+ */
+async function safeFetch(url, options) {
+  const res  = await fetch(url, options);
+  const text = await res.text();
+
+  // Server trả về lỗi HTTP
+  if (!res.ok) {
+    const errDetail = text.substring(0, 300).replace(/<[^>]+>/g, ' ').trim();
+    throw new FetchError(res.status, res.statusText, errDetail);
+  }
+
+  // Thử parse JSON
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    // Server trả HTML (warning, notice hoặc fatal PHP error)
+    const preview = text.substring(0, 500).replace(/<[^>]+>/g, ' ').trim();
+    console.error('[categories.js] Server trả về HTML thay vì JSON:\n', preview);
+    throw new FetchError(res.status, 'Invalid JSON', preview);
+  }
+}
+
+class FetchError extends Error {
+  constructor(status, statusText, detail = '') {
+    super(`HTTP ${status}: ${statusText}`);
+    this.status = status;
+    this.detail = detail;
+  }
+}
 
 /* ── View mode ───────────────────────────────────────────────── */
 let curView = localStorage.getItem('catView') || 'grid';
@@ -32,8 +73,8 @@ function applyView(mode) {
 
 /* ── Filter client-side ──────────────────────────────────────── */
 function filterCats() {
-  const kw  = document.getElementById('searchInput').value.toLowerCase().trim();
-  const st  = document.getElementById('filterStatus').value;
+  const kw = document.getElementById('searchInput').value.toLowerCase().trim();
+  const st = document.getElementById('filterStatus').value;
 
   document.querySelectorAll('#catGrid .cat-card:not(.cat-add-btn)').forEach(el => {
     const match = (!kw || el.dataset.name.toLowerCase().includes(kw))
@@ -48,14 +89,15 @@ function filterCats() {
     row.style.display = match ? '' : 'none';
     if (match) cnt++;
   });
+
   const lbl = document.getElementById('listCount');
   if (lbl) lbl.textContent = cnt + ' danh mục';
 }
 
 /* ── Modal ───────────────────────────────────────────────────── */
 function openModal(c = null) {
-  document.getElementById('cId').value              = c ? c.id     : '';
-  document.getElementById('cName').value            = c ? c.name   : '';
+  document.getElementById('cId').value              = c ? c.id   : '';
+  document.getElementById('cName').value            = c ? c.name : '';
   document.getElementById('cDesc').value            = c ? (c.desc || '') : '';
   document.getElementById('cStatusToggle').checked  = c ? c.status == 1  : true;
   document.getElementById('cStatus').value          = c ? c.status : 1;
@@ -79,21 +121,27 @@ function syncStatus() {
   lbl.style.color = checked ? 'var(--green)' : 'var(--red)';
 }
 
-document.getElementById('catModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('catModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
 
 /* ── Validate ────────────────────────────────────────────────── */
 function showError(msg) {
   const el = document.getElementById('nameError');
-  el.textContent = msg; el.style.display = 'block';
+  el.textContent = msg;
+  el.style.display = 'block';
   document.getElementById('cName').style.borderColor = 'var(--red)';
 }
+
 function clearError() {
   document.getElementById('nameError').style.display = 'none';
   document.getElementById('cName').style.borderColor = '';
 }
 
-/* ── SAVE ────────────────────────────────────────────────────── */
+/* ── SAVE (Add / Edit) ────────────────────────────────────────── */
 async function saveCat() {
   clearError();
 
@@ -109,64 +157,67 @@ async function saveCat() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
   try {
-    const res = await fetch(API, {
-      method: 'POST',
+    const data = await safeFetch(API, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: id ? 'edit' : 'add', id, name, desc, status }),
+      body:    JSON.stringify({ action: id ? 'edit' : 'add', id, name, desc, status }),
     });
-
-    // ✅ Kiểm tra HTTP status trước khi parse JSON
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    }
-
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch(e) {
-      // In ra response thực để debug
-      console.error('Server trả về (không phải JSON):', text.substring(0, 500));
-      throw new Error('Server không trả về JSON hợp lệ. Xem Console để biết chi tiết.');
-    }
 
     if (data.success) {
       showToast(data.message, 'success');
       closeModal();
       setTimeout(() => location.reload(), 700);
     } else {
-      showError(data.message);
+      showError(data.message || 'Thao tác thất bại.');
     }
-  } catch (error) {
-    showError('Lỗi: ' + error.message);
-    console.error('saveCat error:', error);
+
+  } catch (err) {
+    console.error('[saveCat]', err);
+
+    if (err instanceof FetchError && err.status >= 500) {
+      // Lỗi server nghiêm trọng → mở error.php trong tab mới
+      showToast('Lỗi server! Chuyển đến trang Error Log...', 'error', 4000);
+      setTimeout(() => window.open(ERROR_PAGE, '_blank'), 1200);
+    } else {
+      showError('Lỗi: ' + err.message);
+    }
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu';
   }
 }
 
-/* ── TOGGLE ──────────────────────────────────────────────────── */
+/* ── TOGGLE status ────────────────────────────────────────────── */
 async function toggleStatus(id, btn) {
   btn.disabled = true;
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
   try {
-    const res  = await fetch(API, {
-      method: 'POST',
+    const data = await safeFetch(API, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'toggle', id }),
+      body:    JSON.stringify({ action: 'toggle', id }),
     });
-    const data = await res.json();
 
     if (data.success) {
       showToast(data.message, 'info');
       setTimeout(() => location.reload(), 600);
     } else {
-      showToast(data.message, 'warning');
+      showToast(data.message || 'Không thể thay đổi trạng thái.', 'warning');
       btn.disabled = false;
+      btn.innerHTML = origHTML;
     }
-  } catch(e) {
-    showToast('Lỗi kết nối.', 'error');
+
+  } catch (err) {
+    console.error('[toggleStatus]', err);
+    showToast('Lỗi kết nối: ' + err.message, 'error');
     btn.disabled = false;
+    btn.innerHTML = origHTML;
+
+    if (err instanceof FetchError && err.status >= 500) {
+      setTimeout(() => window.open(ERROR_PAGE, '_blank'), 1000);
+    }
   }
 }
 
@@ -177,15 +228,15 @@ function confirmDelete(id, name) {
      <span style="font-size:12px;color:var(--text-muted)">Hành động này không thể hoàn tác.</span>`,
     async () => {
       try {
-        const res  = await fetch(API, {
-          method: 'POST',
+        const data = await safeFetch(API, {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'delete', id }),
+          body:    JSON.stringify({ action: 'delete', id }),
         });
-        const data = await res.json();
 
         if (data.success) {
           showToast(data.message, 'success');
+          // Xóa các element DOM liên quan ngay, không cần reload
           document.querySelectorAll(`[data-id="${id}"]`).forEach(el => {
             el.style.transition = 'opacity .3s, transform .3s';
             el.style.opacity    = '0';
@@ -193,29 +244,39 @@ function confirmDelete(id, name) {
             setTimeout(() => el.remove(), 320);
           });
         } else {
-          showToast(data.message, 'error');
+          showToast(data.message || 'Không thể xóa danh mục.', 'error');
         }
-      } catch(e) {
-        showToast('Lỗi kết nối.', 'error');
+
+      } catch (err) {
+        console.error('[confirmDelete]', err);
+        showToast('Lỗi: ' + err.message, 'error');
+
+        if (err instanceof FetchError && err.status >= 500) {
+          setTimeout(() => window.open(ERROR_PAGE, '_blank'), 1000);
+        }
       }
     },
     'Xoá'
   );
 }
 
-/* ── Fallback Toast & Confirm ────────────────────────────────── */
+/* ── Fallback Toast & Confirm (nếu admin.js chưa tải) ────────── */
 if (typeof showToast === 'undefined') {
-  window.showToast = function (msg, type = 'info') {
-    const color = { success: '#3fb950', error: '#f85149', warning: '#f0a500', info: '#58a6ff' };
-    const el = Object.assign(document.createElement('div'), { textContent: msg });
+  window.showToast = function (msg, type = 'info', duration = 3000) {
+    const colors = { success:'#3fb950', error:'#f85149', warning:'#f0a500', info:'#58a6ff' };
+    const el = document.createElement('div');
+    el.textContent = msg;
     Object.assign(el.style, {
-      position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
-      background: color[type] || color.info, color: '#fff',
-      padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: '600',
-      boxShadow: '0 4px 16px rgba(0,0,0,.3)', transition: 'opacity .35s',
+      position:'fixed', bottom:'24px', right:'24px', zIndex:'9999',
+      background: colors[type] || colors.info, color:'#fff',
+      padding:'10px 18px', borderRadius:'8px', fontSize:'13px', fontWeight:'600',
+      boxShadow:'0 4px 16px rgba(0,0,0,.3)', transition:'opacity .35s',
     });
     document.body.appendChild(el);
-    setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 380); }, 2600);
+    setTimeout(() => {
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 380);
+    }, duration);
   };
 }
 

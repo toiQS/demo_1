@@ -7,9 +7,8 @@
  * Input : $name (string)
  * Output: $result = ['success' => bool, 'message' => string, 'id' => int|null]
  */
-require_once 'services/connectDB.php'; 
-require_once 'services/object_status.php';
-
+require_once __DIR__ . '/../connectDB.php';
+require_once __DIR__ . '/../object_status.php';
 
 $result = ['success' => false, 'message' => '', 'id' => null];
 
@@ -36,7 +35,7 @@ try {
     }
     $stmt->close();
 
-    // Thêm mới
+    // Thêm mới — schema chỉ có idDM AUTO_INCREMENT + LOAISP
     $stmt = $conn->prepare("INSERT INTO danhmuc (LOAISP) VALUES (?)");
     $stmt->bind_param('s', $name);
 
@@ -51,7 +50,10 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     $result['message'] = 'Lỗi hệ thống: ' . $e->getMessage();
-    file_put_contents(__DIR__ . 'logs\category\add.txt',
+
+    // FIX: thêm DIRECTORY_SEPARATOR để path đúng
+    $logPath = __DIR__ . '/../../logs/category/add.txt';
+    @file_put_contents($logPath,
         date('[Y-m-d H:i:s]') . ' [CATEGORIES/add] ' . $e->getMessage() . "\n",
         FILE_APPEND
     );

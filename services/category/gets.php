@@ -1,6 +1,6 @@
 <?php
 /**
- * controllers/categories/gets.php
+ * services/category/gets.php
  * Lấy danh sách danhmuc + đếm số sản phẩm mỗi danh mục
  *
  * Schema thực tế: danhmuc(idDM, LOAISP)
@@ -13,10 +13,12 @@
  *   status => 1  (cột không tồn tại, mặc định hoạt động)
  *   count  => số sản phẩm đang bán thuộc danh mục
  */
-require_once 'services/connectDB.php'; 
-require_once 'services/object_status.php';
 
-$categories = [];
+// ── Dùng __DIR__ để đảm bảo path tuyệt đối, không phụ thuộc CWD ──
+require_once __DIR__ . '/../connectDB.php';
+require_once __DIR__ . '/../object_status.php';
+
+$categories = [];   // ← Khởi tạo trước mọi thứ để tránh "Undefined variable"
 
 try {
     $sp_active = trang_thai_san_pham::ACTIVE->value;
@@ -43,10 +45,12 @@ try {
     }
 
 } catch (mysqli_sql_exception $e) {
-    file_put_contents('logs/index/dashboard.text',
-        date('[Y-m-d H:i:s]') . ' [CATEGORIES/gets] ' . $e->getMessage() . "\n",
-        FILE_APPEND
-    );
+    $errMsg = date('[Y-m-d H:i:s]') . ' [CATEGORIES/gets] ' . $e->getMessage() . "\n";
+
+    // Ghi vào đúng 2 file log
+    $logPath = __DIR__ . '/../../logs/category/gets.txt';
+    @file_put_contents($logPath, $errMsg, FILE_APPEND);
+    @file_put_contents(__DIR__ . '/../../logs/index/dashboard.text', $errMsg, FILE_APPEND);
 }
 
 // ── Badge counts cho sidebar (layout.php cần 2 biến này) ──────
@@ -68,8 +72,6 @@ try {
         ->fetch_assoc()['c'];
 
 } catch (mysqli_sql_exception $e) {
-    file_put_contents('logs/index/dashboard.text',
-        date('[Y-m-d H:i:s]') . ' [CATEGORIES/badge] ' . $e->getMessage() . "\n",
-        FILE_APPEND
-    );
+    $errMsg = date('[Y-m-d H:i:s]') . ' [CATEGORIES/badge] ' . $e->getMessage() . "\n";
+    @file_put_contents(__DIR__ . '/../../logs/index/dashboard.text', $errMsg, FILE_APPEND);
 }
