@@ -4,7 +4,7 @@ include_once 'controllers/index_actions/get_dashboard_data.php';
 $page_title    = 'Dashboard';
 $page_subtitle = 'Xin chào! Đây là tổng quan hệ thống hôm nay.';
 $active_nav    = 'home';
-include_once 'views/layout.php';
+include_once 'layout.php';
 
 ?>
 
@@ -185,4 +185,4 @@ include_once 'views/layout.php';
 
 </div><!-- /bottom-grid -->
 
-<?php require_once 'assets/layout_footer.php'; ?>
+<?php require_once 'layout_footer.php'; ?>
