@@ -1,6 +1,6 @@
 <?php
-include_once "controllers/connectDB.php";
-include_once "controllers/object_status.php";
+include_once "services/connectDB.php";
+include_once "services/object_status.php";
 
 // ===== STATS =====
 $stats = [

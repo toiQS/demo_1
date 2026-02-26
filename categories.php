@@ -4,7 +4,7 @@ $page_subtitle = 'Thêm & quản lý loại thiết bị điện tử';
 $active_nav    = 'categories';
 
 // Lấy $categories[], $pending_orders, $low_stock_count từ DB
-require_once 'controllers\categories\gets.php';
+require_once 'services/category/gets.php';
 
 // Stats nhanh
 $totalCat  = count($categories);
@@ -84,57 +84,67 @@ require_once 'includes/layout.php';
      GRID VIEW
 ============================================================= -->
 <div id="catGrid" class="cat-grid">
-  <?php foreach ($categories as $i => $c):
-    // Data truyền sang JS — dùng đúng key JS đang expect
-    $cJson = json_encode([
-      'id'     => (int)$c['id'],
-      'name'   => $c['name'],
-      'desc'   => $c['desc'] ?? '',
-      'status' => (int)$c['status'],
-    ]);
-  ?>
-    <div class="cat-card"
-      data-id="<?= $c['id'] ?>"
-      data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>"
-      data-status="<?= $c['status'] ?>"
-      style="animation-delay:<?= round($i * 0.06, 2) ?>s">
+  <?php if (empty($categories)): ?>
+    <div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-muted)">
+      <i class="fa-solid fa-tags" style="font-size:36px;margin-bottom:12px;display:block;opacity:.3"></i>
+      Chưa có danh mục nào. Hãy thêm danh mục đầu tiên!
+    </div>
+  <?php else: ?>
+    <?php foreach ($categories as $i => $c):
+      $cJson = json_encode([
+        'id'     => (int)$c['id'],
+        'name'   => $c['name'],
+        'desc'   => $c['desc'] ?? '',
+        'status' => (int)$c['status'],
+      ]);
+    ?>
+      <div class="cat-card"
+        data-id="<?= $c['id'] ?>"
+        data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>"
+        data-status="<?= $c['status'] ?>"
+        style="animation-delay:<?= round($i * 0.06, 2) ?>s">
 
-      <div class="status-dot <?= $c['status'] ? 'dot-green' : 'dot-red' ?>"></div>
+        <div class="status-dot <?= $c['status'] ? 'dot-green' : 'dot-red' ?>"></div>
 
-      <div class="cat-icon <?= $c['status'] ? '' : 'cat-icon-dim' ?>">
-        <i class="fa-solid fa-tags"></i>
-      </div>
-      <div class="cat-name"><?= htmlspecialchars($c['name']) ?></div>
+        <div class="cat-icon <?= $c['status'] ? '' : 'cat-icon-dim' ?>">
+          <i class="fa-solid fa-tags"></i>
+        </div>
+        <div class="cat-name"><?= htmlspecialchars($c['name']) ?></div>
 
-      <div class="cat-meta">
-        <span class="cat-count">Sản phẩm: <b><?= number_format($c['count']) ?></b></span>
-        <?= $c['status']
-          ? '<span class="badge-green">● Hoạt động</span>'
-          : '<span class="badge-red">● Ẩn</span>' ?>
-      </div>
+        <?php if (!empty($c['desc'])): ?>
+          <div class="cat-desc"><?= htmlspecialchars($c['desc']) ?></div>
+        <?php endif; ?>
 
-      <div class="cat-footer">
-        <div class="action-btns">
-          <button class="btn btn-secondary btn-sm"
-            onclick='openModal(<?= $cJson ?>)' title="Sửa">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button class="btn btn-sm <?= $c['status'] ? 'btn-toggle-off' : 'btn-toggle-on' ?>"
-            onclick="toggleStatus(<?= $c['id'] ?>, this)"
-            title="<?= $c['status'] ? 'Ẩn danh mục' : 'Kích hoạt' ?>">
-            <i class="fa-solid <?= $c['status'] ? 'fa-eye-slash' : 'fa-eye' ?>"></i>
-          </button>
-          <button class="btn btn-danger btn-sm"
-            onclick="confirmDelete(<?= $c['id'] ?>, '<?= addslashes($c['name']) ?>')"
-            <?= $c['count'] > 0
-              ? 'disabled title="Còn ' . $c['count'] . ' SP, không thể xoá"'
-              : 'title="Xoá danh mục"' ?>>
-            <i class="fa-solid fa-trash"></i>
-          </button>
+        <div class="cat-meta">
+          <span class="cat-count">Sản phẩm: <b><?= number_format($c['count']) ?></b></span>
+          <?= $c['status']
+            ? '<span class="badge-green">● Hoạt động</span>'
+            : '<span class="badge-red">● Ẩn</span>' ?>
+        </div>
+
+        <div class="cat-footer">
+          <div class="action-btns">
+            <button class="btn btn-secondary btn-sm"
+              onclick='openModal(<?= $cJson ?>)' title="Sửa">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn btn-sm <?= $c['status'] ? 'btn-toggle-off' : 'btn-toggle-on' ?>"
+              onclick="toggleStatus(<?= $c['id'] ?>, this)"
+              title="<?= $c['status'] ? 'Ẩn danh mục' : 'Kích hoạt' ?>">
+              <i class="fa-solid <?= $c['status'] ? 'fa-eye-slash' : 'fa-eye' ?>"></i>
+            </button>
+            <button class="btn btn-danger btn-sm"
+              onclick="confirmDelete(<?= $c['id'] ?>, '<?= addslashes($c['name']) ?>')"
+              <?= $c['count'] > 0
+                ? 'disabled title="Còn ' . $c['count'] . ' SP, không thể xoá"'
+                : 'title="Xoá danh mục"' ?>>
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  <?php endforeach; ?>
+    <?php endforeach; ?>
+  <?php endif; ?>
 
   <!-- Nút thêm nhanh -->
   <div class="cat-add-btn" onclick="openModal()">
@@ -161,67 +171,79 @@ require_once 'includes/layout.php';
         <tr>
           <th style="width:50px">#</th>
           <th>Tên danh mục</th>
+          <th>Mô tả</th>
           <th style="text-align:center;width:80px">Số SP</th>
           <th style="text-align:center;width:120px">Trạng thái</th>
           <th style="width:145px">Thao tác</th>
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($categories as $c):
-          $cJson = json_encode([
-            'id'     => (int)$c['id'],
-            'name'   => $c['name'],
-            'desc'   => $c['desc'] ?? '',
-            'status' => (int)$c['status'],
-          ]);
-        ?>
-          <tr data-id="<?= $c['id'] ?>"
-            data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>"
-            data-status="<?= $c['status'] ?>">
-
-            <td style="font-family:var(--mono);color:var(--text-muted)"><?= $c['id'] ?></td>
-
-            <td style="font-weight:600"><?= htmlspecialchars($c['name']) ?></td>
-
-            <td style="text-align:center;font-family:var(--mono);color:var(--blue)">
-              <?= number_format($c['count']) ?>
-            </td>
-            <td style="text-align:center">
-              <?= $c['status']
-                ? '<span class="badge-pill green">● Hoạt động</span>'
-                : '<span class="badge-pill red">● Ẩn</span>' ?>
-            </td>
-            <td>
-              <div class="action-btns">
-                <button class="btn btn-secondary btn-sm"
-                  onclick='openModal(<?= $cJson ?>)' title="Sửa">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button class="btn btn-sm <?= $c['status'] ? 'btn-toggle-off' : 'btn-toggle-on' ?>"
-                  onclick="toggleStatus(<?= $c['id'] ?>, this)"
-                  title="<?= $c['status'] ? 'Ẩn' : 'Kích hoạt' ?>">
-                  <i class="fa-solid <?= $c['status'] ? 'fa-eye-slash' : 'fa-eye' ?>"></i>
-                </button>
-                <button class="btn btn-danger btn-sm"
-                  onclick="confirmDelete(<?= $c['id'] ?>, '<?= addslashes($c['name']) ?>')"
-                  <?= $c['count'] > 0
-                    ? 'disabled title="Còn ' . $c['count'] . ' SP"'
-                    : '' ?>>
-                  <i class="fa-solid fa-trash"></i>
-                </button>
-              </div>
+        <?php if (empty($categories)): ?>
+          <tr>
+            <td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted)">
+              Chưa có danh mục nào.
             </td>
           </tr>
-        <?php endforeach; ?>
+        <?php else: ?>
+          <?php foreach ($categories as $c):
+            $cJson = json_encode([
+              'id'     => (int)$c['id'],
+              'name'   => $c['name'],
+              'desc'   => $c['desc'] ?? '',
+              'status' => (int)$c['status'],
+            ]);
+          ?>
+            <tr data-id="<?= $c['id'] ?>"
+              data-name="<?= htmlspecialchars($c['name'], ENT_QUOTES) ?>"
+              data-status="<?= $c['status'] ?>">
+
+              <td style="font-family:var(--mono);color:var(--text-muted)"><?= $c['id'] ?></td>
+
+              <td style="font-weight:600"><?= htmlspecialchars($c['name']) ?></td>
+
+              <td style="color:var(--text-muted);font-size:12px;max-width:240px;
+                          overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                <?= htmlspecialchars($c['desc'] ?? '') ?>
+              </td>
+
+              <td style="text-align:center;font-family:var(--mono);color:var(--blue)">
+                <?= number_format($c['count']) ?>
+              </td>
+              <td style="text-align:center">
+                <?= $c['status']
+                  ? '<span class="badge-pill green">● Hoạt động</span>'
+                  : '<span class="badge-pill red">● Ẩn</span>' ?>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-secondary btn-sm"
+                    onclick='openModal(<?= $cJson ?>)' title="Sửa">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button class="btn btn-sm <?= $c['status'] ? 'btn-toggle-off' : 'btn-toggle-on' ?>"
+                    onclick="toggleStatus(<?= $c['id'] ?>, this)"
+                    title="<?= $c['status'] ? 'Ẩn' : 'Kích hoạt' ?>">
+                    <i class="fa-solid <?= $c['status'] ? 'fa-eye-slash' : 'fa-eye' ?>"></i>
+                  </button>
+                  <button class="btn btn-danger btn-sm"
+                    onclick="confirmDelete(<?= $c['id'] ?>, '<?= addslashes($c['name']) ?>')"
+                    <?= $c['count'] > 0
+                      ? 'disabled title="Còn ' . $c['count'] . ' SP"'
+                      : '' ?>>
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
       </tbody>
     </table>
   </div>
 </div>
 
 <!-- ============================================================
-     MODAL — HTML khớp CHÍNH XÁC với categories.js
-     JS cần: cId, cName, cDesc, cStatusToggle, cStatus(hidden),
-             statusLabel, nameError, btnSave, catModal, modalTitle
+     MODAL
 ============================================================= -->
 <div class="modal-overlay" id="catModal">
   <div class="modal">
@@ -233,10 +255,8 @@ require_once 'includes/layout.php';
     </div>
 
     <div class="modal-body">
-      <!-- ID ẩn -->
       <input type="hidden" id="cId">
 
-      <!-- Tên danh mục -->
       <div class="form-group">
         <label class="form-label">
           Tên danh mục <span style="color:var(--red)">*</span>
@@ -244,13 +264,11 @@ require_once 'includes/layout.php';
         <input type="text" class="form-control" id="cName"
           placeholder="VD: Điện thoại, Laptop..." maxlength="255"
           onkeydown="if(event.key==='Enter') saveCat()">
-        <!-- JS dùng element này để hiện lỗi -->
         <div id="nameError"
           style="display:none;color:#f85149;font-size:12px;margin-top:5px;font-weight:600">
         </div>
       </div>
 
-      <!-- Mô tả -->
       <div class="form-group">
         <label class="form-label">Mô tả</label>
         <textarea class="form-control" id="cDesc" rows="3"
@@ -258,7 +276,6 @@ require_once 'includes/layout.php';
           style="resize:vertical"></textarea>
       </div>
 
-      <!-- Trạng thái — toggle switch (JS tìm cStatusToggle + statusLabel + cStatus hidden) -->
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label">Trạng thái</label>
         <div class="toggle-wrap">
@@ -270,7 +287,6 @@ require_once 'includes/layout.php';
             style="font-size:13px;font-weight:700;color:var(--green)">
             Hoạt động
           </span>
-          <!-- Giá trị thực JS đọc khi submit -->
           <input type="hidden" id="cStatus" value="1">
         </div>
       </div>
@@ -278,7 +294,6 @@ require_once 'includes/layout.php';
 
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Huỷ</button>
-      <!-- id="btnSave" là bắt buộc, JS tìm element này để loading state -->
       <button class="btn btn-primary" id="btnSave" onclick="saveCat()">
         <i class="fa-solid fa-floppy-disk"></i> Lưu
       </button>
@@ -287,5 +302,7 @@ require_once 'includes/layout.php';
 </div>
 
 <script src="assets/js/categories.js"></script>
-<?php $conn->close();
-require_once 'includes/layout_footer.php'; ?>
+<?php
+$conn->close();
+require_once 'includes/layout_footer.php';
+?>
