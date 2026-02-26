@@ -42,7 +42,7 @@ $nav_items = [
   'manage' => [
     'title' => 'Quản lý',
     'items' => [
-      'products'  => ['label' => 'Sản phẩm',    'icon' => 'fa-box-open',        'href' => 'products.php'],
+      'products'  => ['label' => 'Sản phẩm',    'icon' => 'fa-box-open',        'href' => 'views\categories.php'],
       'categories'=> ['label' => 'Danh mục',    'icon' => 'fa-tags',            'href' => 'categories.php'],
       'orders'    => ['label' => 'Đơn hàng',    'icon' => 'fa-receipt',         'href' => 'orders.php',    'badge' => $pending_orders,  'badge_class' => ''],
       'import'    => ['label' => 'Nhập hàng',   'icon' => 'fa-truck-ramp-box',  'href' => 'import.php'],
