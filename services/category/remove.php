@@ -1,13 +1,13 @@
 <?php
 /**
- * controllers/categories/remove.php
+ * services/category/remove.php
  * Xoá danh mục (chỉ cho phép nếu không còn sản phẩm nào thuộc DM)
  *
  * Input  : $id (int)
  * Output : $result = ['success' => bool, 'message' => string]
  */
-require_once 'services/connectDB.php'; 
-require_once 'services/object_status.php';
+require_once __DIR__ . '/../../services/connectDB.php';
+require_once __DIR__ . '/../../services/object_status.php';
 
 $result = ['success' => false, 'message' => ''];
 
@@ -19,11 +19,11 @@ if ($id <= 0) {
 }
 
 try {
-    // Lấy tên danh mục
-    $stmt = $conn->prepare("SELECT TENDM FROM danhmuc WHERE idDM = ?");
+    // Lấy tên danh mục — dùng đúng cột LOAISP (không có TENDM)
+    $stmt = $conn->prepare("SELECT LOAISP FROM danhmuc WHERE idDM = ?");
     $stmt->bind_param('i', $id);
     $stmt->execute();
-    $stmt->bind_result($tendm);
+    $stmt->bind_result($loaisp);
 
     if (!$stmt->fetch()) {
         $result['message'] = 'Danh mục không tồn tại.';
@@ -43,7 +43,7 @@ try {
     $stmt->close();
 
     if ($cnt > 0) {
-        $result['message'] = "Không thể xoá: danh mục \"$tendm\" còn $cnt sản phẩm.";
+        $result['message'] = "Không thể xoá: danh mục \"$loaisp\" còn $cnt sản phẩm.";
         return;
     }
 
@@ -53,7 +53,7 @@ try {
 
     if ($stmt->execute()) {
         $result['success'] = true;
-        $result['message'] = "Đã xoá danh mục \"$tendm\" thành công.";
+        $result['message'] = "Đã xoá danh mục \"$loaisp\" thành công.";
     } else {
         $result['message'] = 'Lỗi khi xoá danh mục. Vui lòng thử lại.';
     }
@@ -61,7 +61,7 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     $result['message'] = 'Lỗi hệ thống: ' . $e->getMessage();
-    file_put_contents('logs/index/dashboard.text',
+    file_put_contents(__DIR__ . '/../../logs/index/dashboard.text',
         date('[Y-m-d H:i:s]') . ' [CATEGORIES/remove] ' . $e->getMessage() . "\n",
         FILE_APPEND
     );

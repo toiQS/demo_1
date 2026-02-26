@@ -1,3 +1,4 @@
+// ✅ Đường dẫn đúng tới file controller
 const API = 'controllers/categories_action.php';
 
 /* ── View mode ───────────────────────────────────────────────── */
@@ -32,16 +33,14 @@ function applyView(mode) {
 /* ── Filter client-side ──────────────────────────────────────── */
 function filterCats() {
   const kw  = document.getElementById('searchInput').value.toLowerCase().trim();
-  const st  = document.getElementById('filterStatus').value; // '' | '0' | '1'
+  const st  = document.getElementById('filterStatus').value;
 
-  // Grid
   document.querySelectorAll('#catGrid .cat-card:not(.cat-add-btn)').forEach(el => {
     const match = (!kw || el.dataset.name.toLowerCase().includes(kw))
                && (st === '' || el.dataset.status === st);
     el.style.display = match ? '' : 'none';
   });
 
-  // List
   let cnt = 0;
   document.querySelectorAll('#catList tbody tr').forEach(row => {
     const match = (!kw || row.dataset.name.toLowerCase().includes(kw))
@@ -54,7 +53,6 @@ function filterCats() {
 }
 
 /* ── Modal ───────────────────────────────────────────────────── */
-// c = {id, name, desc, status} khi sửa | null khi thêm
 function openModal(c = null) {
   document.getElementById('cId').value              = c ? c.id     : '';
   document.getElementById('cName').value            = c ? c.name   : '';
@@ -81,7 +79,6 @@ function syncStatus() {
   lbl.style.color = checked ? 'var(--green)' : 'var(--red)';
 }
 
-// Đóng khi click nền tối | ESC
 document.getElementById('catModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
@@ -96,7 +93,7 @@ function clearError() {
   document.getElementById('cName').style.borderColor = '';
 }
 
-/* ── SAVE (thêm / sửa) ───────────────────────────────────────── */
+/* ── SAVE ────────────────────────────────────────────────────── */
 async function saveCat() {
   clearError();
 
@@ -112,12 +109,26 @@ async function saveCat() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
   try {
-    const res  = await fetch(API, {
+    const res = await fetch(API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: id ? 'edit' : 'add', id, name, desc, status }),
     });
-    const data = await res.json();
+
+    // ✅ Kiểm tra HTTP status trước khi parse JSON
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      // In ra response thực để debug
+      console.error('Server trả về (không phải JSON):', text.substring(0, 500));
+      throw new Error('Server không trả về JSON hợp lệ. Xem Console để biết chi tiết.');
+    }
 
     if (data.success) {
       showToast(data.message, 'success');
@@ -127,14 +138,15 @@ async function saveCat() {
       showError(data.message);
     }
   } catch (error) {
-    showError('Lỗi kết nối server. Vui lòng thử lại.'+ error );
+    showError('Lỗi: ' + error.message);
+    console.error('saveCat error:', error);
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu';
   }
 }
 
-/* ── TOGGLE trạng thái ───────────────────────────────────────── */
+/* ── TOGGLE ──────────────────────────────────────────────────── */
 async function toggleStatus(id, btn) {
   btn.disabled = true;
   try {
@@ -149,10 +161,10 @@ async function toggleStatus(id, btn) {
       showToast(data.message, 'info');
       setTimeout(() => location.reload(), 600);
     } else {
-      showToast(data.message, 'error');
+      showToast(data.message, 'warning');
       btn.disabled = false;
     }
-  } catch {
+  } catch(e) {
     showToast('Lỗi kết nối.', 'error');
     btn.disabled = false;
   }
@@ -174,7 +186,6 @@ function confirmDelete(id, name) {
 
         if (data.success) {
           showToast(data.message, 'success');
-          // Xoá phần tử DOM ngay, không cần reload
           document.querySelectorAll(`[data-id="${id}"]`).forEach(el => {
             el.style.transition = 'opacity .3s, transform .3s';
             el.style.opacity    = '0';
@@ -184,7 +195,7 @@ function confirmDelete(id, name) {
         } else {
           showToast(data.message, 'error');
         }
-      } catch {
+      } catch(e) {
         showToast('Lỗi kết nối.', 'error');
       }
     },
@@ -192,13 +203,11 @@ function confirmDelete(id, name) {
   );
 }
 
-/* ── Fallback Toast & Confirm (nếu layout chưa có) ──────────── */
+/* ── Fallback Toast & Confirm ────────────────────────────────── */
 if (typeof showToast === 'undefined') {
   window.showToast = function (msg, type = 'info') {
     const color = { success: '#3fb950', error: '#f85149', warning: '#f0a500', info: '#58a6ff' };
-    const el = Object.assign(document.createElement('div'), {
-      textContent: msg,
-    });
+    const el = Object.assign(document.createElement('div'), { textContent: msg });
     Object.assign(el.style, {
       position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
       background: color[type] || color.info, color: '#fff',
