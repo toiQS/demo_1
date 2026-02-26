@@ -210,3 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initSidebarToggle();
   initActiveNav();
 });
+
+
+// get count users
+
+function count_users(){
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.onreadystatechange = function(){
+    xmlHttp.open("get","get_count_users.php",true);
+    xmlHttp.send();
+  }
+}

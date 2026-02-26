@@ -1,57 +1,12 @@
 <?php
-/**
- * admin_home.php — Trang Dashboard
- * Sử dụng layout dùng chung
- */
 
-// ---- Khai báo cho layout ----
 $page_title    = 'Dashboard';
 $page_subtitle = 'Xin chào! Đây là tổng quan hệ thống hôm nay.';
 $active_nav    = 'home';
 
-// ---- Dữ liệu mẫu (thay bằng query DB) ----
-$stats = [
-  'total_orders'    => 984,
-  'pending_orders'  => 27,
-  'total_products'  => 346,
-  'low_stock'       => 5,
-  'total_users'     => 2_415,
-  'revenue_month'   => 1_285_600_000,
-  'import_receipts' => 42,
-];
-
-// Badge cho sidebar
-$pending_orders  = $stats['pending_orders'];
-$low_stock_count = $stats['low_stock'];
-
-$recent_orders = [
-  ['id' => '#DH0984', 'customer' => 'Nguyễn Văn An',  'total' => '28.990.000₫', 'status' => 'pending',    'date' => '20/02/2026'],
-  ['id' => '#DH0983', 'customer' => 'Trần Thị Bích',  'total' => '14.500.000₫', 'status' => 'processing', 'date' => '20/02/2026'],
-  ['id' => '#DH0982', 'customer' => 'Lê Minh Cường',  'total' => '52.000.000₫', 'status' => 'shipped',    'date' => '19/02/2026'],
-  ['id' => '#DH0981', 'customer' => 'Phạm Thị Diệu',  'total' => '3.290.000₫',  'status' => 'completed',  'date' => '19/02/2026'],
-  ['id' => '#DH0980', 'customer' => 'Hoàng Quốc Dũng', 'total' => '9.800.000₫', 'status' => 'cancelled',  'date' => '18/02/2026'],
-];
-
-$low_stock_items = [
-  ['name' => 'iPhone 15 Pro Max 256GB (Titan Đen)', 'qty' => 2, 'threshold' => 5],
-  ['name' => 'Samsung Galaxy S24 Ultra 512GB',       'qty' => 1, 'threshold' => 5],
-  ['name' => 'MacBook Air M3 15" 16GB/512GB',        'qty' => 3, 'threshold' => 8],
-  ['name' => 'AirPods Pro Gen 2 (USB-C)',             'qty' => 4, 'threshold' => 10],
-];
-
-$status_labels = [
-  'pending'    => ['label' => 'Chờ xác nhận', 'class' => 'badge-pending'],
-  'processing' => ['label' => 'Đang xử lý',   'class' => 'badge-processing'],
-  'shipped'    => ['label' => 'Đang giao',     'class' => 'badge-shipped'],
-  'completed'  => ['label' => 'Hoàn thành',   'class' => 'badge-completed'],
-  'cancelled'  => ['label' => 'Đã huỷ',        'class' => 'badge-cancelled'],
-];
-
-// ---- Load layout header ----
-require_once 'includes/layout.php';
+include_once 'assets/layout.php';
 ?>
 
-<!-- ===== STATS ===== -->
 <div class="stats-grid">
   <div class="stat-card">
     <div class="stat-icon si-amber"><i class="fa-solid fa-receipt"></i></div>
@@ -232,4 +187,4 @@ require_once 'includes/layout.php';
 
 </div><!-- /bottom-grid -->
 
-<?php require_once 'includes/layout_footer.php'; ?>
+<?php require_once 'assets/layout_footer.php'; ?>

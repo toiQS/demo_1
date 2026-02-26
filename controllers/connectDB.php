@@ -9,6 +9,8 @@ $conn = new mysqli($host, $user, $pass, $db);
 
 if ($conn->connect_error)
 {
+    $file = fopen("logs\dbconnect.txt","w");
+    fwrite($file," $conn->connect_error");
     die("Connection failed: " . $conn->connect_error);
 }
 
