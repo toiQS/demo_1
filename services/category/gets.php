@@ -13,7 +13,7 @@
  *   status => 1  (cột không tồn tại, mặc định hoạt động)
  *   count  => số sản phẩm đang bán thuộc danh mục
  */
-require_once 'services/connectDB.php';
+require_once 'services/connectDB.php'; 
 require_once 'services/object_status.php';
 
 $categories = [];
