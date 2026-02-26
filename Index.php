@@ -5,6 +5,12 @@ $page_subtitle = 'Xin chào! Đây là tổng quan hệ thống hôm nay.';
 $active_nav    = 'home';
 
 include_once 'assets/layout.php';
+
+require_once 'controllers\index_actions\get_count_users.php';
+
+$user_count = $result_user_count;
+
+
 ?>
 
 <div class="stats-grid">
@@ -13,7 +19,7 @@ include_once 'assets/layout.php';
     <div class="stat-info">
       <div class="stat-label">Tổng đơn hàng</div>
       <div class="stat-value"><?= number_format($stats['total_orders']) ?></div>
-      <div class="stat-sub"><span class="up">▲ 12%</span> so với tháng trước</div>
+      <!-- <div class="stat-sub"><span class="up">▲ 12%</span> so với tháng trước</div> -->
     </div>
   </div>
 
@@ -31,7 +37,7 @@ include_once 'assets/layout.php';
     <div class="stat-info">
       <div class="stat-label">Doanh thu tháng</div>
       <div class="stat-value" style="font-size:18px;color:var(--green)"><?= number_format($stats['revenue_month']) ?>₫</div>
-      <div class="stat-sub"><span class="up">▲ 8.4%</span> so với tháng trước</div>
+      <!-- <div class="stat-sub"><span class="up">▲ 8.4%</span> so với tháng trước</div> -->
     </div>
   </div>
 
@@ -48,8 +54,8 @@ include_once 'assets/layout.php';
     <div class="stat-icon si-purple"><i class="fa-solid fa-users"></i></div>
     <div class="stat-info">
       <div class="stat-label">Người dùng</div>
-      <div class="stat-value"><?= number_format($stats['total_users']) ?></div>
-      <div class="stat-sub"><span class="up">▲ 5.2%</span> tháng này</div>
+      <div class="stat-value"><?= number_format($user_count) ?></div>
+      <!-- <div class="stat-sub"><span class="up">▲ 5.2%</span> tháng này</div> -->
     </div>
   </div>
 

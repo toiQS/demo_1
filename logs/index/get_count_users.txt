@@ -1,0 +1,19 @@
+[2026-02-26 04:32:59] [2] Undefined variable $stats in E:\xampp\htdocs\demo_1\Index.php on line 21
+[2026-02-26 04:32:59] [2] Trying to access array offset on value of type null in E:\xampp\htdocs\demo_1\Index.php on line 21
+[2026-02-26 04:32:59] [8192] number_format(): Passing null to parameter #1 ($num) of type float is deprecated in E:\xampp\htdocs\demo_1\Index.php on line 21
+[2026-02-26 04:32:59] [2] Undefined variable $stats in E:\xampp\htdocs\demo_1\Index.php on line 30
+[2026-02-26 04:32:59] [2] Trying to access array offset on value of type null in E:\xampp\htdocs\demo_1\Index.php on line 30
+[2026-02-26 04:32:59] [2] Undefined variable $stats in E:\xampp\htdocs\demo_1\Index.php on line 39
+[2026-02-26 04:32:59] [2] Trying to access array offset on value of type null in E:\xampp\htdocs\demo_1\Index.php on line 39
+[2026-02-26 04:32:59] [8192] number_format(): Passing null to parameter #1 ($num) of type float is deprecated in E:\xampp\htdocs\demo_1\Index.php on line 39
+[2026-02-26 04:32:59] [2] Undefined variable $stats in E:\xampp\htdocs\demo_1\Index.php on line 48
+[2026-02-26 04:32:59] [2] Trying to access array offset on value of type null in E:\xampp\htdocs\demo_1\Index.php on line 48
+[2026-02-26 04:32:59] [8192] number_format(): Passing null to parameter #1 ($num) of type float is deprecated in E:\xampp\htdocs\demo_1\Index.php on line 48
+[2026-02-26 04:32:59] [2] Undefined variable $stats in E:\xampp\htdocs\demo_1\Index.php on line 49
+[2026-02-26 04:32:59] [2] Trying to access array offset on value of type null in E:\xampp\htdocs\demo_1\Index.php on line 49
+[2026-02-26 04:32:59] [2] Undefined variable $stats in E:\xampp\htdocs\demo_1\Index.php on line 66
+[2026-02-26 04:32:59] [2] Trying to access array offset on value of type null in E:\xampp\htdocs\demo_1\Index.php on line 66
+[2026-02-26 04:32:59] [2] Undefined variable $recent_orders in E:\xampp\htdocs\demo_1\Index.php on line 153
+[2026-02-26 04:32:59] [2] foreach() argument must be of type array|object, null given in E:\xampp\htdocs\demo_1\Index.php on line 153
+[2026-02-26 04:32:59] [2] Undefined variable $low_stock_items in E:\xampp\htdocs\demo_1\Index.php on line 178
+[2026-02-26 04:32:59] [2] foreach() argument must be of type array|object, null given in E:\xampp\htdocs\demo_1\Index.php on line 178
