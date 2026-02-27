@@ -6,6 +6,62 @@ $active_nav    = 'categories';
 // Lấy $categories[], $pending_orders, $low_stock_count từ DB
 // require_once 'controllers\categories\gets.php';
 $categories = [];
+
+include_once 'connectDB.php';
+include_once 'object_status.php';
+try {
+  $sp_active = trang_thai_san_pham::ACTIVE->value;
+
+  $res = $conn->query(
+    "SELECT
+             dm.idDM              AS id,
+             dm.LOAISP            AS name,
+             ''                   AS `desc`,
+             1                    AS status,
+             COUNT(sp.idSP)       AS `count`
+         FROM danhmuc dm
+         LEFT JOIN sanpham sp
+               ON sp.idDM      = dm.idDM
+              AND sp.TRANGTHAI = $sp_active
+         GROUP BY dm.idDM, dm.LOAISP
+         ORDER BY dm.idDM ASC"
+  );
+
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      $categories[] = $row;
+    }
+  }
+} catch (mysqli_sql_exception $e) {
+  $errMsg = date('[Y-m-d H:i:s]') . ' [CATEGORIES/gets] ' . $e->getMessage() . "\n";
+
+  // Ghi vào đúng 2 file log
+  $logPath = __DIR__ . '/../../logs/category/gets.txt';
+  @file_put_contents($logPath, $errMsg, FILE_APPEND);
+  @file_put_contents(__DIR__ . '/../../logs/index/dashboard.text', $errMsg, FILE_APPEND);
+}
+
+// ── Badge counts cho sidebar (layout.php cần 2 biến này) ──────
+$pending_orders  = 0;
+$low_stock_count = 0;
+
+try {
+  $pending = trang_thai_hoa_don::PENDING->value;
+  $pending_orders = (int) $conn
+    ->query("SELECT COUNT(*) AS c FROM hoadon WHERE TRANGTHAI = '$pending'")
+    ->fetch_assoc()['c'];
+
+  $sp_active = trang_thai_san_pham::ACTIVE->value;
+  $low_stock_count = (int) $conn
+    ->query("SELECT COUNT(*) AS c
+                 FROM sanpham
+                 WHERE SOLUONG < 10
+                   AND TRANGTHAI = $sp_active")
+    ->fetch_assoc()['c'];
+} catch (mysqli_sql_exception $e) {
+  $errMsg = date('[Y-m-d H:i:s]') . ' [CATEGORIES/badge] ' . $e->getMessage() . "\n";
+  @file_put_contents(__DIR__ . '/../../logs/index/dashboard.text', $errMsg, FILE_APPEND);
+}
 // Stats nhanh
 $totalCat  = count($categories);
 $activeCat = count(array_filter($categories, fn($c) => $c['status'] == 1));
@@ -250,14 +306,6 @@ require_once 'includes/layout.php';
         </div>
       </div>
 
-      <!-- Mô tả -->
-      <div class="form-group">
-        <label class="form-label">Mô tả</label>
-        <textarea class="form-control" id="cDesc" rows="3"
-          placeholder="Mô tả ngắn về danh mục..."
-          style="resize:vertical"></textarea>
-      </div>
-
       <!-- Trạng thái — toggle switch (JS tìm cStatusToggle + statusLabel + cStatus hidden) -->
       <div class="form-group" style="margin-bottom:0">
         <label class="form-label">Trạng thái</label>
@@ -287,7 +335,7 @@ require_once 'includes/layout.php';
 </div>
 
 <script src="assets/js/categories.js"></script>
-<?php 
+<?php
 // $conn->close();
 require_once 'includes/layout_footer.php'; ?>
 
@@ -298,3 +346,17 @@ require_once 'includes/layout_footer.php'; ?>
 
 <?php
 
+include_once 'connectDB.php';
+include_once 'object_status.php';
+function add_category($loai_san_pham, $trang_thai)
+{
+  global $conn;
+
+  try {
+    
+    $res = $conn->query("INSERT INTO danhmuc(LOAISP, TRANGTHAI) VALUES ($loai_san_pham, $trang_thai);");
+  } catch (mysqli_sql_exception $e) {
+  }
+}
+
+?>

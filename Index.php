@@ -1,6 +1,6 @@
 <?php
 /**
- * index.php — Trang Dashboard
+ * .php — Trang Dashboard
  * Sử dụng layout dùng chung
  */
 
@@ -9,46 +9,159 @@ $page_title    = 'Dashboard';
 $page_subtitle = 'Xin chào! Đây là tổng quan hệ thống hôm nay.';
 $active_nav    = 'home';
 
-// ---- Dữ liệu mẫu (thay bằng query DB) ----
+include_once 'connectDB.php';
+include_once 'object_status.php';
+
 $stats = [
-  'total_orders'    => 984,
-  'pending_orders'  => 27,
-  'total_products'  => 346,
-  'low_stock'       => 5,
-  'total_users'     => 2_415,
-  'revenue_month'   => 1_285_600_000,
-  'import_receipts' => 42,
+    'total_orders'    => 0,
+    'pending_orders'  => 0,
+    'revenue_month'   => 0,
+    'total_products'  => 0,
+    'low_stock'       => 0,
+    'total_users'     => 0,
+    'import_receipts' => 0,
+];
+try {
+    $month = date('m');
+    $year  = date('Y');
+
+    $stats['total_orders'] = $conn
+        ->query("SELECT COUNT(*) AS total FROM hoadon")
+        ->fetch_assoc()['total'];
+
+    $pending = trang_thai_hoa_don::PENDING->value;
+    $stats['pending_orders'] = $conn
+        ->query("SELECT COUNT(*) AS total FROM hoadon WHERE TRANGTHAI = '$pending'")
+        ->fetch_assoc()['total'];
+
+    $completed = trang_thai_hoa_don::COMPLETED->value;
+    $stats['revenue_month'] = $conn
+        ->query("SELECT COALESCE(SUM(THANHTIEN), 0) AS total
+                 FROM hoadon
+                 WHERE TRANGTHAI = '$completed'
+                   AND MONTH(NGAYMUA) = $month
+                   AND YEAR(NGAYMUA)  = $year")
+        ->fetch_assoc()['total'];
+
+    $sp_active = trang_thai_san_pham::ACTIVE->value;
+    $stats['total_products'] = $conn
+        ->query("SELECT COUNT(*) AS total FROM sanpham WHERE TRANGTHAI = $sp_active")
+        ->fetch_assoc()['total'];
+
+    $stats['low_stock'] = $conn
+        ->query("SELECT COUNT(*) AS total FROM sanpham WHERE SOLUONG < 10 AND TRANGTHAI = $sp_active")
+        ->fetch_assoc()['total'];
+
+    $stats['total_users'] = $conn
+        ->query("SELECT COUNT(*) AS total FROM taikhoan")
+        ->fetch_assoc()['total'];
+
+    $pn_hoan_tat = trang_thai_phieu_nhap::HOAN_TAT->value;
+    $stats['import_receipts'] = $conn
+        ->query("SELECT COUNT(*) AS total FROM phieunhap
+                 WHERE TRANGTHAI = $pn_hoan_tat
+                   AND MONTH(NGAYNHAP) = $month
+                   AND YEAR(NGAYNHAP)  = $year")
+        ->fetch_assoc()['total'];
+
+} catch (mysqli_sql_exception $e) {
+    file_put_contents("logs/index/dashboard.text",
+        date('[Y-m-d H:i:s]') . " [STATS] " . $e->getMessage() . "\n", FILE_APPEND);
+}
+
+// ===== RECENT ORDERS =====
+$recent_orders = [];
+try {
+    $cancelled = trang_thai_hoa_don::CANCELLED->value;
+    $res = $conn->query(
+        "SELECT hd.idHD, tk.HOTEN, hd.THANHTIEN, hd.TRANGTHAI, hd.NGAYMUA
+         FROM hoadon hd
+         JOIN taikhoan tk ON hd.idTK = tk.idTK
+         WHERE hd.TRANGTHAI != '$cancelled'
+         ORDER BY hd.NGAYMUA DESC
+         LIMIT 10"
+    );
+    while ($row = $res->fetch_assoc()) {
+        $recent_orders[] = [
+            'id'       => '#HD' . str_pad($row['idHD'], 4, '0', STR_PAD_LEFT),
+            'customer' => $row['HOTEN'],
+            'total'    => number_format($row['THANHTIEN']) . '₫',
+            'status'   => $row['TRANGTHAI'],
+            'date'     => date('d/m/Y', strtotime($row['NGAYMUA'])),
+        ];
+    }
+} catch (mysqli_sql_exception $e) {
+    file_put_contents("logs/index/dashboard.text",
+        date('[Y-m-d H:i:s]') . " [ORDERS] " . $e->getMessage() . "\n", FILE_APPEND);
+}
+
+// ===== LOW STOCK ITEMS =====
+$low_stock_items = [];
+try {
+    $sp_active = trang_thai_san_pham::ACTIVE->value;
+    $res = $conn->query(
+        "SELECT TENSP, SOLUONG FROM sanpham
+         WHERE SOLUONG < 10 AND TRANGTHAI = $sp_active
+         ORDER BY SOLUONG ASC
+         LIMIT 5"
+    );
+    while ($row = $res->fetch_assoc()) {
+        $low_stock_items[] = [
+            'name'      => $row['TENSP'],
+            'qty'       => $row['SOLUONG'],
+            'threshold' => 10,
+        ];
+    }
+} catch (mysqli_sql_exception $e) {
+    file_put_contents("logs/index/dashboard.text",
+        date('[Y-m-d H:i:s]') . " [LOWSTOCK] " . $e->getMessage() . "\n", FILE_APPEND);
+}
+
+// ===== CATEGORY SUMMARY =====
+$category_summary = [];
+try {
+    $sp_active = trang_thai_san_pham::ACTIVE->value;
+
+    $res = $conn->query(
+        "SELECT
+             dm.idDM        AS id,
+             dm.LOAISP      AS name,
+             COUNT(sp.idSP) AS sp_count
+         FROM danhmuc dm
+         LEFT JOIN sanpham sp
+               ON sp.idDM     = dm.idDM
+              AND sp.TRANGTHAI = $sp_active
+         GROUP BY dm.idDM, dm.LOAISP
+         ORDER BY sp_count DESC
+         LIMIT 6"
+    );
+
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            $category_summary[] = $row;
+        }
+    }
+} catch (mysqli_sql_exception $e) {
+    file_put_contents("logs/index/dashboard.text",
+        date('[Y-m-d H:i:s]') . " [CATEGORIES] " . $e->getMessage() . "\n", FILE_APPEND);
+}
+
+// ===== STATUS LABELS =====
+$status_labels = [
+    trang_thai_hoa_don::PENDING->value    => ['class' => 'badge-pending',    'label' => 'Chờ xác nhận'],
+    trang_thai_hoa_don::PROCESSING->value => ['class' => 'badge-processing', 'label' => 'Đang xử lý'],
+    trang_thai_hoa_don::SHIPPED->value    => ['class' => 'badge-shipped',    'label' => 'Đang giao'],
+    trang_thai_hoa_don::COMPLETED->value  => ['class' => 'badge-completed',  'label' => 'Hoàn thành'],
+    trang_thai_hoa_don::CANCELLED->value  => ['class' => 'badge-cancelled',  'label' => 'Đã huỷ'],
 ];
 
-// Badge cho sidebar
+// Badge count cho sidebar
 $pending_orders  = $stats['pending_orders'];
 $low_stock_count = $stats['low_stock'];
 
-$recent_orders = [
-  ['id' => '#DH0984', 'customer' => 'Nguyễn Văn An',  'total' => '28.990.000₫', 'status' => 'pending',    'date' => '20/02/2026'],
-  ['id' => '#DH0983', 'customer' => 'Trần Thị Bích',  'total' => '14.500.000₫', 'status' => 'processing', 'date' => '20/02/2026'],
-  ['id' => '#DH0982', 'customer' => 'Lê Minh Cường',  'total' => '52.000.000₫', 'status' => 'shipped',    'date' => '19/02/2026'],
-  ['id' => '#DH0981', 'customer' => 'Phạm Thị Diệu',  'total' => '3.290.000₫',  'status' => 'completed',  'date' => '19/02/2026'],
-  ['id' => '#DH0980', 'customer' => 'Hoàng Quốc Dũng', 'total' => '9.800.000₫', 'status' => 'cancelled',  'date' => '18/02/2026'],
-];
 
-$low_stock_items = [
-  ['name' => 'iPhone 15 Pro Max 256GB (Titan Đen)', 'qty' => 2, 'threshold' => 5],
-  ['name' => 'Samsung Galaxy S24 Ultra 512GB',       'qty' => 1, 'threshold' => 5],
-  ['name' => 'MacBook Air M3 15" 16GB/512GB',        'qty' => 3, 'threshold' => 8],
-  ['name' => 'AirPods Pro Gen 2 (USB-C)',             'qty' => 4, 'threshold' => 10],
-];
-
-$status_labels = [
-  'pending'    => ['label' => 'Chờ xác nhận', 'class' => 'badge-pending'],
-  'processing' => ['label' => 'Đang xử lý',   'class' => 'badge-processing'],
-  'shipped'    => ['label' => 'Đang giao',     'class' => 'badge-shipped'],
-  'completed'  => ['label' => 'Hoàn thành',   'class' => 'badge-completed'],
-  'cancelled'  => ['label' => 'Đã huỷ',        'class' => 'badge-cancelled'],
-];
-
-// ---- Load layout header ----
 require_once 'includes/layout.php';
+
 ?>
 
 <!-- ===== STATS ===== -->
