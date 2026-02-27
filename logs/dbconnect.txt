@@ -1,6 +1,0 @@
-[2026-02-26 20:56:42] [2] Undefined variable $categories in E:\xampp\htdocs\demo_1\categories.php on line 10
-[2026-02-26 20:57:09] [2] Undefined variable $categories in E:\xampp\htdocs\demo_1\categories.php on line 10
-[2026-02-26 20:58:02] [2] Undefined variable $categories in E:\xampp\htdocs\demo_1\categories.php on line 10
-[2026-02-26 20:58:02] [2] Undefined variable $categories in E:\xampp\htdocs\demo_1\categories.php on line 10
-[2026-02-26 20:59:13] [2] Undefined variable $categories in E:\xampp\htdocs\demo_1\categories.php on line 10
-[2026-02-26 21:03:41] [2] Undefined variable $categories in E:\xampp\htdocs\demo_1\categories.php on line 10

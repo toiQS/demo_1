@@ -1,17 +1,18 @@
 <?php
-include_once "services/connectDB.php";
-include_once "services/object_status.php";
+include_once "connectDB.php";
+include_once "object_status.php";
 
 // ===== STATS =====
 $stats = [
-    'total_orders'    => 0,
-    'pending_orders'  => 0,
-    'revenue_month'   => 0,
-    'total_products'  => 0,
-    'low_stock'       => 0,
-    'total_users'     => 0,
+    'total_orders' => 1,
+    'pending_orders' => 0,
+    'revenue_month' => 0,
+    'total_products' => 0,
+    'low_stock' => 0,
+    'total_users' => 0,
     'import_receipts' => 0,
 ];
+// echo json_encode($stats);
 
 try {
     $month = date('m');
@@ -127,6 +128,7 @@ $status_labels = [
     trang_thai_hoa_don::CANCELLED->value  => ['class' => 'badge-cancelled',  'label' => 'Đã huỷ'],
 ];
 
-// Badge count cho sidebar (truyền vào layout.php)
 $pending_orders  = $stats['pending_orders'];
 $low_stock_count = $stats['low_stock'];
+$conn->close();
+?>
