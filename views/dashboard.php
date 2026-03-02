@@ -11,6 +11,7 @@ require_once 'includes/header.php';
 // $doanhThu = ...
 // $donHang  = ...
 include_once __DIR__ . '/../services/dashboard/load_starts.php';
+include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
 ?>
 
 <!-- QUICK ACTIONS -->
@@ -67,15 +68,15 @@ include_once __DIR__ . '/../services/dashboard/load_starts.php';
       <div class="stat-label">Khách hàng</div>
       <div class="stat-icon">👤</div>
     </div>
-    <div class="stat-value">1,384</div>
-    <div class="stat-change up">▲ +23 tuần này</div>
+    <div class="stat-value"><?=  number_format( $starts['total_customer_count']) ?></div>
+    <div class="stat-change up">▲ <?=  number_format($starts['new_customer_current_week']) ?> tuần này</div>
   </div>
   <div class="stat-card" style="--card-color:var(--red)">
     <div class="stat-top">
       <div class="stat-label">Hàng sắp hết</div>
       <div class="stat-icon">⚠️</div>
     </div>
-    <div class="stat-value">6</div>
+    <div class="stat-value"><?= number_format(    $starts['stock_is_running_out']) ?></div>
     <div class="stat-change down">▼ Cần nhập bổ sung</div>
   </div>
 </div>

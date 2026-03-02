@@ -27,6 +27,10 @@ try {
     }
     $starts['total_order_count'] = get_total_order_count($pdo);
     $starts['new_order_count'] = get_new_order_count($pdo,$day,$month,$year);
+    $starts['total_customer_count'] = get_total_customer_count($pdo);
+    $starts['new_customer_current_week'] = get_new_customer_current_week($pdo);
+    $starts['stock_is_running_out'] = get_stock_is_running_out($pdo);
+
 } catch (Exception $e) {
     echo $e->getMessage();
 }
@@ -77,5 +81,34 @@ function get_new_order_count(PDO $pdo, $day,$month, $year)
             AND YEAR(NGAYMUA)  = :year";
     $stmt = $pdo->prepare($sql);
      $stmt->execute([':day' => $day, ':month' => $month, ':year' => $year]);
+    return $stmt->fetch()['count'] ?? 0;
+}
+function get_total_customer_count(PDO $pdo)
+{
+    $sql = "SELECT COUNT(*) as count FROM taikhoan WHERE TRANGTHAI = 1 and PHANLOAI = 1;";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetch()['count'] ?? 0;
+}
+
+function get_new_customer_current_week(PDO $pdo) {
+    $sql = "SELECT COUNT(*) AS count 
+            FROM taikhoan 
+            WHERE PHANLOAI = 1
+            AND TRANGTHAI = 1
+            AND NGAYTAO >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetch()['count'] ?? 0;
+}
+
+function get_stock_is_running_out(PDO $pdo) {
+    $sql = "SELECT COUNT(DISTINCT s.idSP) AS count
+            FROM sanpham s
+            JOIN cauhinh_canhbao c ON c.idSP = s.idSP
+            WHERE s.TRANGTHAI = 1
+            AND s.SOLUONG <= c.NGUONG_DAT";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
     return $stmt->fetch()['count'] ?? 0;
 }
