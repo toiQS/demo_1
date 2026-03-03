@@ -10,11 +10,13 @@ include_once __DIR__ . '/../services/dashboard/load_starts.php';
 include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
 include_once __DIR__ . '/../services/dashboard/get_top_products.php';
 include_once __DIR__ . '/../services/dashboard/get_revenue.php';
+include_once __DIR__ . '/../services/dashboard/get_categories.php';
 
-$recent_orders = get_recent_orders($pdo, 5);
-$top_products  = get_top_products($pdo, 5);
-$revenue_7days = calc_bar_heights(get_revenue_7days($pdo));
-$revenue_stats = get_revenue_stats($revenue_7days);
+$recent_orders     = get_recent_orders($pdo, 5);
+$top_products      = get_top_products($pdo, 5);
+$revenue_7days     = calc_bar_heights(get_revenue_7days($pdo));
+$revenue_stats     = get_revenue_stats($revenue_7days);
+$categories        = get_categories_revenue($pdo);
 ?>
 
 <!-- QUICK ACTIONS -->
@@ -221,26 +223,26 @@ $revenue_stats = get_revenue_stats($revenue_7days);
       <div class="panel-title">DANH MỤC</div>
       <span class="panel-action">Theo doanh thu</span>
     </div>
-    <div class="cat-row">
-      <div class="cat-top"><span class="cat-name">📱 Điện thoại</span><span class="cat-pct">42%</span></div>
-      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:42%"></div></div>
-    </div>
-    <div class="cat-row">
-      <div class="cat-top"><span class="cat-name">💻 Tablet</span><span class="cat-pct">28%</span></div>
-      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:28%"></div></div>
-    </div>
-    <div class="cat-row">
-      <div class="cat-top"><span class="cat-name">🎧 Tai nghe</span><span class="cat-pct">14%</span></div>
-      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:14%"></div></div>
-    </div>
-    <div class="cat-row">
-      <div class="cat-top"><span class="cat-name">🔌 Củ sạc</span><span class="cat-pct">10%</span></div>
-      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:10%"></div></div>
-    </div>
-    <div class="cat-row">
-      <div class="cat-top"><span class="cat-name">🔗 Dây sạc</span><span class="cat-pct">6%</span></div>
-      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:6%"></div></div>
-    </div>
+    <?php if (empty($categories)): ?>
+      <div style="text-align:center;color:var(--text3);padding:20px">
+        Chưa có dữ liệu
+      </div>
+    <?php else: ?>
+      <?php foreach ($categories as $cat): ?>
+        <?php if ($cat['doanhthu'] <= 0) continue; ?>
+        <div class="cat-row">
+          <div class="cat-top">
+            <span class="cat-name">
+              <?= $cat['icon'] ?> <?= htmlspecialchars($cat['loaisp']) ?>
+            </span>
+            <span class="cat-pct"><?= number_format($cat['pct'], 1) ?>%</span>
+          </div>
+          <div class="cat-bar-bg">
+            <div class="cat-bar-fill" style="width:<?= $cat['pct'] ?>%"></div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
   </div>
 </div>
 
