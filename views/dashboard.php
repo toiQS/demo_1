@@ -11,10 +11,10 @@ include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
 include_once __DIR__ . '/../services/dashboard/get_top_products.php';
 include_once __DIR__ . '/../services/dashboard/get_revenue.php';
 
-$revenue_7days = calc_bar_heights(get_revenue_7days($pdo));
-$revenue_stats = get_revenue_stats($revenue_7days);s
 $recent_orders = get_recent_orders($pdo, 5);
 $top_products  = get_top_products($pdo, 5);
+$revenue_7days = calc_bar_heights(get_revenue_7days($pdo));
+$revenue_stats = get_revenue_stats($revenue_7days);
 ?>
 
 <!-- QUICK ACTIONS -->
@@ -183,22 +183,35 @@ $top_products  = get_top_products($pdo, 5);
       <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">VNĐ (triệu)</span>
     </div>
     <div class="chart-bars">
-      <div class="bar-wrap"><div class="bar" style="height:55%"></div><div class="bar-label">T2</div></div>
-      <div class="bar-wrap"><div class="bar" style="height:72%"></div><div class="bar-label">T3</div></div>
-      <div class="bar-wrap"><div class="bar" style="height:48%"></div><div class="bar-label">T4</div></div>
-      <div class="bar-wrap"><div class="bar" style="height:90%"></div><div class="bar-label">T5</div></div>
-      <div class="bar-wrap"><div class="bar" style="height:65%"></div><div class="bar-label">T6</div></div>
-      <div class="bar-wrap"><div class="bar" style="height:100%"></div><div class="bar-label">T7</div></div>
-      <div class="bar-wrap"><div class="bar" style="height:40%;opacity:.4"></div><div class="bar-label">CN</div></div>
+      <?php foreach ($revenue_7days as $day): ?>
+        <?php
+          $isToday = $day['date'] === date('Y-m-d');
+          $height  = max($day['height'], 4);
+          $opacity = ($isToday && $day['revenue'] == 0) ? 'opacity:.4;' : '';
+        ?>
+        <div class="bar-wrap">
+          <div class="bar"
+               style="height:<?= $height ?>%;<?= $opacity ?>"
+               title="<?= $day['label'] ?> <?= date('d/m', strtotime($day['date'])) ?>: <?= number_format($day['revenue']) ?>đ">
+          </div>
+          <div class="bar-label" style="<?= $isToday ? 'color:var(--accent);font-weight:700' : '' ?>">
+            <?= $day['label'] ?>
+          </div>
+        </div>
+      <?php endforeach; ?>
     </div>
     <div style="padding:8px 20px 16px;display:flex;gap:20px">
       <div>
         <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">TRUNG BÌNH/NGÀY</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent)">120.3M</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accent)">
+          <?= number_format($revenue_stats['avg'] / 1_000_000, 1) ?>M
+        </div>
       </div>
       <div>
         <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace">ĐỈNH NGÀY</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green)">198.7M</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green)">
+          <?= number_format($revenue_stats['max'] / 1_000_000, 1) ?>M
+        </div>
       </div>
     </div>
   </div>
