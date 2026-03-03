@@ -6,12 +6,10 @@ $pageTitle   = 'DASHBOARD';
 $breadcrumb  = 'Tổng quan / Dashboard';
 require_once 'includes/header.php';
 
-// TODO: Kết nối DB và lấy số liệu thực
-// require_once '../database/db.php';
-// $doanhThu = ...
-// $donHang  = ...
 include_once __DIR__ . '/../services/dashboard/load_starts.php';
 include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
+
+$recent_orders = get_recent_orders($pdo, 5);
 ?>
 
 <!-- QUICK ACTIONS -->
@@ -41,42 +39,41 @@ include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
       <div class="stat-label">Doanh thu tháng</div>
       <div class="stat-icon">💰</div>
     </div>
-    <!-- <div class="stat-value">842.5M</div> -->
     <div class="stat-value"><?= number_format($starts["revenue_current_monthly"]) ?></div>
-    <!-- <div class="stat-change up">▲ +12.4% so tháng trước</div> -->
     <?php
-    $pct = $starts['percent_revenue_last_monthly'];
-    $arrow = $pct >= 0 ? '▲' : '▼';
-    $cls   = $pct >= 0 ? 'up' : 'down';
+      $pct   = $starts['percent_revenue_last_monthly'];
+      $arrow = $pct >= 0 ? '▲' : '▼';
+      $cls   = $pct >= 0 ? 'up' : 'down';
     ?>
     <div class="stat-change <?= $cls ?>">
       <?= $arrow ?> <?= ($pct >= 0 ? '+' : '') . number_format($pct, 1) ?>% so tháng trước
     </div>
-    <!-- <div class="stat-change up"> <?= number_format($starts['percent_revenue_last_monthly']) ?> so tháng trước</div> -->
   </div>
+
   <div class="stat-card" style="--card-color:var(--blue)">
     <div class="stat-top">
       <div class="stat-label">Đơn hàng</div>
       <div class="stat-icon">🛒</div>
     </div>
-    <!-- <div class="stat-value">247</div> -->
     <div class="stat-value"><?= number_format($starts['total_order_count']) ?></div>
     <div class="stat-change up">▲ <?= number_format($starts['new_order_count']) ?> đơn hôm nay</div>
   </div>
+
   <div class="stat-card" style="--card-color:var(--green)">
     <div class="stat-top">
       <div class="stat-label">Khách hàng</div>
       <div class="stat-icon">👤</div>
     </div>
-    <div class="stat-value"><?=  number_format( $starts['total_customer_count']) ?></div>
-    <div class="stat-change up">▲ <?=  number_format($starts['new_customer_current_week']) ?> tuần này</div>
+    <div class="stat-value"><?= number_format($starts['total_customer_count']) ?></div>
+    <div class="stat-change up">▲ <?= number_format($starts['new_customer_current_week']) ?> tuần này</div>
   </div>
+
   <div class="stat-card" style="--card-color:var(--red)">
     <div class="stat-top">
       <div class="stat-label">Hàng sắp hết</div>
       <div class="stat-icon">⚠️</div>
     </div>
-    <div class="stat-value"><?= number_format(    $starts['stock_is_running_out']) ?></div>
+    <div class="stat-value"><?= number_format($starts['stock_is_running_out']) ?></div>
     <div class="stat-change down">▼ Cần nhập bổ sung</div>
   </div>
 </div>
@@ -100,41 +97,31 @@ include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td class="td-main td-mono">#0007</td>
-            <td>Nguyễn Văn A</td>
-            <td class="td-accent">24.000.000đ</td>
-            <td>Tiền mặt</td>
-            <td><span class="badge badge-green">Hoàn thành</span></td>
-          </tr>
-          <tr>
-            <td class="td-main td-mono">#0006</td>
-            <td>Trần Thị B</td>
-            <td class="td-accent">35.000.000đ</td>
-            <td>Chuyển khoản</td>
-            <td><span class="badge badge-amber">Đang xử lý</span></td>
-          </tr>
-          <tr>
-            <td class="td-main td-mono">#0005</td>
-            <td>Lê Minh C</td>
-            <td class="td-accent">6.190.000đ</td>
-            <td>Trực tuyến</td>
-            <td><span class="badge badge-green">Hoàn thành</span></td>
-          </tr>
-          <tr>
-            <td class="td-main td-mono">#0004</td>
-            <td>Phạm Thị D</td>
-            <td class="td-accent">19.000.000đ</td>
-            <td>Chuyển khoản</td>
-            <td><span class="badge badge-red">Đã huỷ</span></td>
-          </tr>
-          <tr>
-            <td class="td-main td-mono">#0003</td>
-            <td>Hoàng Văn E</td>
-            <td class="td-accent">3.000.000đ</td>
-            <td>Tiền mặt</td>
-            <td><span class="badge badge-blue">Đang giao</span></td>
-          </tr>
+          <?php if (empty($recent_orders)): ?>
+            <tr>
+              <td colspan="5" style="text-align:center;color:var(--text3);padding:20px">
+                Chưa có đơn hàng nào
+              </td>
+            </tr>
+          <?php else: ?>
+            <?php foreach ($recent_orders as $order): ?>
+              <tr>
+                <td class="td-main td-mono">
+                  #<?= str_pad($order['idHD'], 4, '0', STR_PAD_LEFT) ?>
+                </td>
+                <td><?= htmlspecialchars($order['HOTEN']) ?></td>
+                <td class="td-accent">
+                  <?= number_format($order['THANHTIEN']) ?>đ
+                </td>
+                <td><?= htmlspecialchars($order['TENPHUONGTHUC']) ?></td>
+                <td>
+                  <span class="badge <?= get_badge_class($order['TRANGTHAI']) ?>">
+                    <?= htmlspecialchars($order['TRANGTHAI']) ?>
+                  </span>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </tbody>
       </table>
     </div>
@@ -218,34 +205,13 @@ include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
       <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)">VNĐ (triệu)</span>
     </div>
     <div class="chart-bars">
-      <div class="bar-wrap">
-        <div class="bar" style="height:55%"></div>
-        <div class="bar-label">T2</div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar" style="height:72%"></div>
-        <div class="bar-label">T3</div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar" style="height:48%"></div>
-        <div class="bar-label">T4</div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar" style="height:90%"></div>
-        <div class="bar-label">T5</div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar" style="height:65%"></div>
-        <div class="bar-label">T6</div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar" style="height:100%"></div>
-        <div class="bar-label">T7</div>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar" style="height:40%;opacity:.4"></div>
-        <div class="bar-label">CN</div>
-      </div>
+      <div class="bar-wrap"><div class="bar" style="height:55%"></div><div class="bar-label">T2</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:72%"></div><div class="bar-label">T3</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:48%"></div><div class="bar-label">T4</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:90%"></div><div class="bar-label">T5</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:65%"></div><div class="bar-label">T6</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:100%"></div><div class="bar-label">T7</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:40%;opacity:.4"></div><div class="bar-label">CN</div></div>
     </div>
     <div style="padding:8px 20px 16px;display:flex;gap:20px">
       <div>
@@ -266,36 +232,25 @@ include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
     </div>
     <div class="cat-row">
       <div class="cat-top"><span class="cat-name">📱 Điện thoại</span><span class="cat-pct">42%</span></div>
-      <div class="cat-bar-bg">
-        <div class="cat-bar-fill" style="width:42%"></div>
-      </div>
+      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:42%"></div></div>
     </div>
     <div class="cat-row">
       <div class="cat-top"><span class="cat-name">💻 Tablet</span><span class="cat-pct">28%</span></div>
-      <div class="cat-bar-bg">
-        <div class="cat-bar-fill" style="width:28%"></div>
-      </div>
+      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:28%"></div></div>
     </div>
     <div class="cat-row">
       <div class="cat-top"><span class="cat-name">🎧 Tai nghe</span><span class="cat-pct">14%</span></div>
-      <div class="cat-bar-bg">
-        <div class="cat-bar-fill" style="width:14%"></div>
-      </div>
+      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:14%"></div></div>
     </div>
     <div class="cat-row">
       <div class="cat-top"><span class="cat-name">🔌 Củ sạc</span><span class="cat-pct">10%</span></div>
-      <div class="cat-bar-bg">
-        <div class="cat-bar-fill" style="width:10%"></div>
-      </div>
+      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:10%"></div></div>
     </div>
     <div class="cat-row">
       <div class="cat-top"><span class="cat-name">🔗 Dây sạc</span><span class="cat-pct">6%</span></div>
-      <div class="cat-bar-bg">
-        <div class="cat-bar-fill" style="width:6%"></div>
-      </div>
+      <div class="cat-bar-bg"><div class="cat-bar-fill" style="width:6%"></div></div>
     </div>
   </div>
 </div>
 
-<?php
-require_once 'includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>
