@@ -8,8 +8,13 @@ require_once 'includes/header.php';
 
 include_once __DIR__ . '/../services/dashboard/load_starts.php';
 include_once __DIR__ . '/../services/dashboard/get_recent_order.php';
+include_once __DIR__ . '/../services/dashboard/get_top_products.php';
+include_once __DIR__ . '/../services/dashboard/get_revenue.php';
 
+$revenue_7days = calc_bar_heights(get_revenue_7days($pdo));
+$revenue_stats = get_revenue_stats($revenue_7days);s
 $recent_orders = get_recent_orders($pdo, 5);
+$top_products  = get_top_products($pdo, 5);
 ?>
 
 <!-- QUICK ACTIONS -->
@@ -130,69 +135,42 @@ $recent_orders = get_recent_orders($pdo, 5);
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title">SẢN PHẨM NỔI BẬT</div>
-      <span class="panel-action">Tuần này</span>
+      <span class="panel-action">Tổng hợp</span>
     </div>
     <div class="panel-body">
-      <div class="product-row">
-        <div class="product-rank top">1</div>
-        <div class="product-img">📱</div>
-        <div class="product-info">
-          <div class="product-name">iPhone 16</div>
-          <div class="product-cat">Điện thoại · Apple</div>
+      <?php if (empty($top_products)): ?>
+        <div style="text-align:center;color:var(--text3);padding:20px">
+          Chưa có dữ liệu bán hàng
         </div>
-        <div class="product-stat">
-          <div class="product-price">24.000.000đ</div>
-          <div class="product-sold">Đã bán: 42</div>
-        </div>
-      </div>
-      <div class="product-row">
-        <div class="product-rank top">2</div>
-        <div class="product-img">📱</div>
-        <div class="product-info">
-          <div class="product-name">iPhone 16 Plus</div>
-          <div class="product-cat">Điện thoại · Apple</div>
-        </div>
-        <div class="product-stat">
-          <div class="product-price">35.000.000đ</div>
-          <div class="product-sold">Đã bán: 28</div>
-        </div>
-      </div>
-      <div class="product-row">
-        <div class="product-rank">3</div>
-        <div class="product-img">🎧</div>
-        <div class="product-info">
-          <div class="product-name">Airpods Pro 2</div>
-          <div class="product-cat">Tai nghe · Apple</div>
-        </div>
-        <div class="product-stat">
-          <div class="product-price">6.190.000đ</div>
-          <div class="product-sold">Đã bán: 19</div>
-        </div>
-      </div>
-      <div class="product-row">
-        <div class="product-rank">4</div>
-        <div class="product-img">📱</div>
-        <div class="product-info">
-          <div class="product-name">Galaxy Z Flip 6</div>
-          <div class="product-cat">Điện thoại · Samsung</div>
-        </div>
-        <div class="product-stat">
-          <div class="product-price">23.900.000đ</div>
-          <div class="product-sold">Đã bán: 15</div>
-        </div>
-      </div>
-      <div class="product-row">
-        <div class="product-rank">5</div>
-        <div class="product-img">💻</div>
-        <div class="product-info">
-          <div class="product-name">Tab S10 Ultra</div>
-          <div class="product-cat">Tablet · Samsung</div>
-        </div>
-        <div class="product-stat">
-          <div class="product-price">24.290.000đ</div>
-          <div class="product-sold">Đã bán: 11</div>
-        </div>
-      </div>
+      <?php else: ?>
+        <?php foreach ($top_products as $i => $product): ?>
+          <?php $rank = $i + 1; ?>
+          <div class="product-row">
+            <div class="product-rank <?= $rank <= 2 ? 'top' : '' ?>">
+              <?= $rank ?>
+            </div>
+            <div class="product-img">
+              <?= get_product_icon($product['LOAISP']) ?>
+            </div>
+            <div class="product-info">
+              <div class="product-name">
+                <?= htmlspecialchars($product['TENSP']) ?>
+              </div>
+              <div class="product-cat">
+                <?= htmlspecialchars($product['LOAISP']) ?> · <?= htmlspecialchars($product['TENHANG']) ?>
+              </div>
+            </div>
+            <div class="product-stat">
+              <div class="product-price">
+                <?= number_format($product['GIABAN']) ?>đ
+              </div>
+              <div class="product-sold">
+                Đã bán: <?= number_format($product['tong_ban']) ?>
+              </div>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
   </div>
 </div>
