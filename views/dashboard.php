@@ -72,7 +72,7 @@ $categories        = get_categories_revenue($pdo);
       <div class="stat-icon">👤</div>
     </div>
     <div class="stat-value"><?= number_format($starts['total_customer_count']) ?></div>
-    <div class="stat-change up">▲ <?= number_format($starts['new_customer_current_week']) ?> tuần này</div>
+    
   </div>
 
   <div class="stat-card" style="--card-color:var(--red)">

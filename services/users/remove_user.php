@@ -1,7 +1,6 @@
 <?php
 // services/users/remove_user.php
 // 3 hàm: lockUser(), unlockUser(), deleteUser()
-// Tất cả trả về ['ok'=>bool, 'msg'=>string]
 
 function lockUser(PDO $pdo, int $id): array
 {
@@ -33,18 +32,25 @@ function deleteUser(PDO $pdo, int $id): array
         ];
     }
 
-    // Xoá dữ liệu phụ trước
-    foreach ([
-        'DELETE FROM chitietgiohang   WHERE idTK = :id',
-        'DELETE FROM chitietkhuyenmai WHERE idTK = :id',
-        'DELETE FROM cauhinh_canhbao  WHERE idND = :id',
-    ] as $sql) {
-        $pdo->prepare($sql)->execute([':id' => $id]);
-    }
+    try {
+        $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare('DELETE FROM taikhoan WHERE idTK = :id');
-    $stmt->execute([':id' => $id]);
-    return $stmt->rowCount()
-        ? ['ok' => true,  'msg' => 'Đã xoá tài khoản thành công.']
-        : ['ok' => false, 'msg' => 'Không tìm thấy tài khoản.'];
+        // Xoá dữ liệu phụ trước
+        // NOTE: chitietgiohang đã bị xoá khỏi schema mới — không DELETE ở đây nữa
+        $pdo->prepare('DELETE FROM chitietkhuyenmai WHERE idTK = :id')->execute([':id' => $id]);
+        $pdo->prepare('DELETE FROM cauhinh_canhbao  WHERE idND = :id')->execute([':id' => $id]);
+
+        $stmt = $pdo->prepare('DELETE FROM taikhoan WHERE idTK = :id');
+        $stmt->execute([':id' => $id]);
+
+        $pdo->commit();
+
+        return $stmt->rowCount()
+            ? ['ok' => true,  'msg' => 'Đã xoá tài khoản thành công.']
+            : ['ok' => false, 'msg' => 'Không tìm thấy tài khoản.'];
+
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        return ['ok' => false, 'msg' => 'Lỗi: ' . $e->getMessage()];
+    }
 }
